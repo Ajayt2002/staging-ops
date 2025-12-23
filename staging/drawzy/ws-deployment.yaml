@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: ws
+  namespace: drawzy-staging
+  labels:
+    app:  ws
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app:  ws
+  template:
+    metadata:
+      labels:
+        app:  ws
+    spec:
+      restartPolicy: Always 
+      containers:
+        - name: ws
+          image:  ajayt8374/ws@sha256:02f607fa4f7275221866a69f7da7674a844f74be76f2d8fe8357ffbce17a9728
+          imagePullPolicy:  IfNotPresent
+          ports:
+            - containerPort: 8080
+          
+          #Requests & Limits
+          resources:
+            requests:
+              cpu:  "0.5"
+              memory: "500Mi"
+            limits:
+              cpu:  "1"
+              memory: "500Mi"
+          
+          # env variables 
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: secret 
+                  key: JWT_SECRET
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: secret 
+                  key: JWT_SECRET

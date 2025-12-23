@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: drawzy-frontend
+  namespace:  drawzy-prod
+  labels:
+    app: drawzy-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app:  drawzy-frontend
+  template:
+    metadata:
+      labels:
+        app:  drawzy-frontend
+    spec:
+      restartPolicy: Always   #For long-running apps use Always, batch->OnFailure
+
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: drawzy-frontend
+
+      initContainers:       #this conatiner will start after postgres running.
+      - name: wait-for-postgres
+        image: busybox:1.35
+        command:
+          - sh
+          - -c
+          - |
+            echo "Waiting for Postgres..."
+            until nc -z postgres-svc 5432; do
+              sleep 2
+            done
+            echo "Postgres is reachable"      
+
+      containers:
+        - name: drawzy-frontend
+          image:  ajayt8374/drawzy:1.1.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+
+          #Requests & Limits  
+          resources:
+            requests:
+              cpu:  "0.5"
+              memory: "500Mi"
+            limits:
+              cpu:  "1"
+              memory: "500Mi"
+
+          #env variables      
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: secret 
+                  key: JWT_SECRET
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: secret
+                  key: NEXTAUTH_SECRET
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: secret 
+                  key: DATABASE_URL
+
+          #Probes                  
+          livenessProbe:    #checks if the app is alive if it fails, k8s restarts the pod.
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5    # Start checking 5 seconds after the container starts
+            periodSeconds: 10         # Probe runs every 10 seconds
+          readinessProbe:             #checks if the app is ready to receive traffic if it fails k8s stops sending traffic but doesn’t restart the pod
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+

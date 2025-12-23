@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: drawzy-staging
+  namespace: argocd
+spec:
+  project: default
+  source:
+    # Path inside the repository where manifests are stored
+    path: staging/drawzy
+    # Git repository containing Kubernetes manifests
+    repoURL:  https://github.com/Ajayt2002/staging-ops.git  
+    targetRevision: HEAD 
+    directory:
+      # Do not recursively scan subdirectories
+      recurse: false
+      jsonnet:
+        extVars: []
+  destination:
+    name: ''
+    namespace:  drawzy-staging
+    # This points to the same cluster where Argo CD is running
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      # Automatically delete resources from the cluster
+      # if they are removed from Git
+      prune: true
+
+      # Automatically fix manual changes in the cluster
+      # and revert them back to Git state
+      selfHeal: true
+  sources: []

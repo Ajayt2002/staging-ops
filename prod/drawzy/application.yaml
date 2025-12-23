@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: drawzy-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    path: staging/drawzy
+    repoURL:  https://github.com/Ajayt2002/staging-ops.git
+    targetRevision: HEAD
+    directory:
+      recurse: false
+      jsonnet:
+        extVars: []
+  destination:
+    name: ''
+    namespace:  drawzy-prod
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      puren: true
+      selfHeal: true
+  sources: []

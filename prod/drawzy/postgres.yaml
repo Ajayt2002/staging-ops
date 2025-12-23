@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: StatefulSet 
+metadata:
+  name: postgres
+  namespace:  drawzy-prod
+  labels:
+    app:  postgres
+spec:
+  serviceName: postgres   # Must match the headless service
+  replicas: 1
+  selector:
+    matchLabels:
+      app:  postgres
+  template:
+    metadata:
+      labels:
+        app:  postgres
+    spec:
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 10  # Give time for clean shutdown
+      affinity:
+        podAntiAffinity:  # Instructs the scheduler to avoid placing similar pods together based on topology
+          requiredDuringSchedulingIgnoredDuringExecution:  # Hard rule: do not schedule unless anti-affinity condition is met
+            - labelSelector:
+                matchLabels:
+                  app: postgres  # Target pods with the label 'app=postgres' — i.e., other pods in this StatefulSet
+              topologyKey: topology.kubernetes.io/zone  # Define the failure domain — here, avoid scheduling in the same AZ
+      containers:
+        - name: postgres
+          image:  postgres:17.7
+          imagePullPolicy:  IfNotPresent
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap 
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: configmap 
+                  key:  POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secret 
+                  key:  POSTGRES_PASSWORD
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+    volumeClaimTemplates:    # This section tells the StatefulSet to dynamically create a unique PVC for each pod.
+      - metadata:
+          name: postgres-data
+        spec:
+          accessModes:  ["ReadWriteOncePod"]  # Ensures the volume is mounted by only **one pod** at a time — and only while that pod is running.
+          storageClassName: ebc-sc-gp3
+          resources:
+            requests:
+              storage: 5Gi  # Requests 5Gi of persistent storage for each pod.
+
+          

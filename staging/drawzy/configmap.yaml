@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: configmap 
+  namespace:  drawzy-staging
+data:
+  POSTGRES_USER:  Drawzy 
+  POSTGRES_DB: Drawzy_Prod
