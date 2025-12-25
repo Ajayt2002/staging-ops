@@ -18,7 +18,7 @@ spec:
       restartPolicy: Always 
       containers:
         - name: ws
-          image:  ajayt8374/ws@sha256:02f607fa4f7275221866a69f7da7674a844f74be76f2d8fe8357ffbce17a9728
+image: ajayt8374/ws@sha256:40e0382f3fa4a0bf32fec74ff872aef5281afb988e0ff8e9cfade789e01aa05a
           imagePullPolicy:  IfNotPresent
           ports:
             - containerPort: 8080
