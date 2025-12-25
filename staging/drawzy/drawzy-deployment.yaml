@@ -31,7 +31,7 @@ spec:
 
       containers:
         - name: drawzy-frontend
-          image:  ajayt8374/drawzy@sha256:805ac0ac196065f6780f7ddd3d33a77f882109f0a8ef3af86d745f633b9e0bac
+          image:  ajayt8374/drawzy@sha256:4f2551edfe8d2f05f066f37889dd78279ffc91241548f32ef6fb6471128a1ed5
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
